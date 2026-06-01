@@ -181,6 +181,8 @@
       <b>Method.</b> Trend = a·xᵇ with a=1.728×10⁻¹⁷, b=5.76, x = days since genesis (3 Jan 2009), calibrated to Porkopolis's published year-end table. Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.45×. Liabilities draw one tranche every 6 months from 1 May 2026 and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
       <b>DCA logic.</b> Each month, the slider amount buys BTC at <em>k</em>·trend price, where <em>k</em> is the "effective price paid" slider (default 0.80×). Because Bitcoin spends roughly half its time below trend and DCA captures the <em>harmonic mean</em> of visited prices, real cycle-aware DCA historically pays ~0.7–0.85× of trend, not 1.0×. Set <em>k</em>=1.0× for trend-only buying. For any candidate borrow-start date S, the model re-runs the LTV stress simulation starting at S (not May 2026) and finds the smallest stack that survives it. The handover is the first month where accumulated ≥ required.<br>
       <b>Caveat.</b> Power-law trend growth decelerates below the fixed 11% interest around the early 2060s, so LTV bottoms out (~19%) and slowly climbs again far out — "forever" holds for ~50 yrs at this sizing, not literally infinitely. Not financial advice.
+      <br><br>
+      <b>CC0 1.0 Universal</b>
     </div>
     </div>
 
