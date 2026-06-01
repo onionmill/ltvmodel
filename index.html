@@ -1,0 +1,383 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BTC Power-Law Collateral Model</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Spectral:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#15161b; --panel2:#1c1e25; --line:#2a2c35;
+    --ink:#ece8df; --muted:#8d8a82; --orange:#f7931a; --teal:#37c8c3;
+    --red:#e0586a; --gold:#d8b25a; --grid:#20222a;
+    --mono:'JetBrains Mono',monospace; --serif:'Fraunces',Georgia,serif; --body:'Spectral',Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+     radial-gradient(1200px 600px at 80% -10%, #1a1410 0%, transparent 60%),
+     radial-gradient(900px 500px at -10% 110%, #0e1717 0%, transparent 55%),
+     var(--bg);
+    color:var(--ink);font-family:var(--body);line-height:1.5;
+    -webkit-font-smoothing:antialiased;padding:34px 22px 60px;}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:26px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--orange);margin:0 0 10px}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(28px,4.4vw,46px);line-height:1.02;margin:0;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--gold)}
+  .sub{color:var(--muted);max-width:62ch;margin:14px 0 0;font-size:15px}
+  .grid{display:grid;grid-template-columns:1fr;gap:22px}
+  @media(min-width:880px){.grid{grid-template-columns:300px 1fr}}
+  .card{background:linear-gradient(180deg,var(--panel) 0%,#101116 100%);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h2{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin:0 0 16px;font-weight:600}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 4px}
+  .ctrl{margin-bottom:18px}
+  .val{font-family:var(--mono);color:var(--ink);font-size:15px;float:right}
+  input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--line);border-radius:3px;outline:none;margin-top:8px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--orange);cursor:pointer;border:2px solid #0c0d10;box-shadow:0 0 0 1px var(--orange)}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--orange);cursor:pointer;border:2px solid #0c0d10}
+  .stat{padding:16px 0;border-top:1px solid var(--line)}
+  .stat:first-of-type{border-top:none}
+  .stat .lbl{font-size:12px;color:var(--muted);letter-spacing:.04em}
+  .stat .big{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1;margin-top:4px;color:var(--orange)}
+  .stat .big small{font-family:var(--mono);font-size:14px;color:var(--muted);font-weight:400}
+  .stat .sm{font-family:var(--mono);font-size:18px;margin-top:4px}
+  .chartcard{padding:22px 20px 12px}
+  .charthead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .charthead h3{font-family:var(--serif);font-size:18px;font-weight:600;margin:0}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);font-family:var(--mono);margin:10px 2px 14px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:3px;border-radius:2px;display:inline-block}
+  .canid{position:relative;height:340px}
+  .canid.short{height:190px}
+  .note{font-size:12.5px;color:var(--muted);font-family:var(--mono);line-height:1.7;margin-top:8px}
+  .toggle{font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;user-select:none;border:1px solid var(--line);padding:4px 9px;border-radius:6px}
+  .toggle.on{color:var(--orange);border-color:var(--orange)}
+  .foot{margin-top:30px;font-size:12px;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--line);padding-top:16px;line-height:1.8}
+  .foot b{color:var(--ink);font-weight:600}
+</style>
+<div class="wrap">
+<header>
+  <p class="kicker">Bitcoin Power-Law Collateral Model · <a class="kicker" href="https://www.porkopolis.io/thechart/">Porkopolis trend</a></p>
+  <h1>Financing $100k/yr forever, <em>borrowing against Bitcoin</em></h1>
+  <p class="sub">How large a stack keeps loan-to-value ≤ 50% even if price sits at the model's
+  16.5ᵗʰ-percentile support band — while drawing $50k tranches and capitalising 11% interest, indefinitely.</p>
+</header>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>Assumptions</h2>
+      <div class="ctrl" style="display:none"><label>16.5ᵗʰ pctile multiple <span class="val" id="vBand">0.45×</span></label>
+        <input type="range" id="band" min="0.45" max="0.85" step="0.01" value="0.45"></div>
+      <div class="ctrl"><label>Loan interest (annual) <span class="val" id="vRate">11%</span></label>
+        <input type="range" id="rate" min="4" max="16" step="0.5" value="11"></div>
+      <div class="ctrl"><label>Annual expense <span class="val" id="vExp">$100k</span></label>
+        <input type="range" id="exp" min="40" max="200" step="10" value="100"></div>
+      <div class="ctrl"><label>Tranche size <span class="val" id="vTr">$50k</span></label>
+        <input type="range" id="tr" min="10" max="100" step="5" value="50"></div>
+      <div class="ctrl"><label>Max LTV <span class="val" id="vLtv">50%</span></label>
+        <input type="range" id="ltv" min="20" max="70" step="1" value="50"></div>
+      <div class="ctrl" style="margin-bottom:0"><label>Horizon <span class="val" id="vHor">2050</span></label>
+        <input type="range" id="hor" min="2035" max="2075" step="1" value="2050"></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h2>Result</h2>
+      <div class="stat"><div class="lbl">Required BTC stack</div>
+        <div class="big" id="oStack">— <small>BTC</small></div></div>
+      <div class="stat"><div class="lbl">Binding moment (peak LTV)</div>
+        <div class="sm" id="oPeak">—</div></div>
+      <div class="stat"><div class="lbl">LTV at trend price, that date</div>
+        <div class="sm" id="oTrendLtv">—</div></div>
+      <div class="stat"><div class="lbl">Stack value today @ trend</div>
+        <div class="sm" id="oToday">—</div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card chartcard">
+      <div class="charthead">
+        <h3>Liabilities vs. collateral value (USD)</h3>
+        <div class="toggle on" id="logTog">log scale</div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--orange)"></i>collateral @ trend</span>
+        <span><i class="swatch" style="background:var(--teal)"></i>collateral @ 16.5ᵗʰ pctile</span>
+        <span><i class="swatch" style="background:var(--gold);height:0;border-top:2px dashed var(--gold)"></i>50% of stress collateral</span>
+        <span><i class="swatch" style="background:var(--red)"></i>accrued liabilities</span>
+      </div>
+      <div class="canid"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="card chartcard" style="margin-top:18px">
+      <div class="charthead"><h3>Loan-to-value over time</h3></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--teal)"></i>LTV if price at 16.5ᵗʰ pctile (stress)</span>
+        <span><i class="swatch" style="background:var(--orange)"></i>LTV if price on trend</span>
+        <span><i class="swatch" style="background:var(--red);height:0;border-top:2px dashed var(--red)"></i>50% limit</span>
+      </div>
+      <div class="canid short"><canvas id="c2"></canvas></div>
+      <p class="note" id="ltvNote"></p>
+    </div>
+  </div>
+</div>
+
+<section style="margin-top:46px;padding-top:36px;border-top:1px solid var(--line)">
+  <p class="kicker" style="color:var(--teal)">Phase 0 · Accumulation via DCA</p>
+  <h1 style="font-size:clamp(24px,3.6vw,36px);margin-bottom:14px">How long until you can <em>start borrowing?</em></h1>
+  <p class="sub" style="margin-bottom:26px">Save monthly into Bitcoin at the trend price, starting today (June 2026). Every month your stack grows;
+  every month the <em>required</em> stack for the strategy above shrinks (because trend price climbs). Wait for them to cross.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>DCA Strategy</h2>
+        <div class="ctrl"><label>Monthly savings <span class="val" id="vDca">$1,000</span></label>
+          <input type="range" id="dca" min="100" max="5000" step="50" value="1000"></div>
+        <div class="ctrl" style="margin-bottom:0"><label>Effective price paid <span class="val" id="vEff">0.80×</span></label>
+          <input type="range" id="eff" min="0.50" max="1.00" step="0.01" value="0.80"></div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h2>Handover</h2>
+        <div class="stat"><div class="lbl">Time to "ready to borrow"</div>
+          <div class="big" id="oReady">—</div></div>
+        <div class="stat"><div class="lbl">Stack accumulated by then</div>
+          <div class="sm" id="oAcc">—</div></div>
+        <div class="stat"><div class="lbl">Total USD invested via DCA</div>
+          <div class="sm" id="oInv">—</div></div>
+        <div class="stat"><div class="lbl">Trend BTC price at handover</div>
+          <div class="sm" id="oPrice">—</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card chartcard">
+        <div class="charthead">
+          <h3>Required stack vs. accumulated stack</h3>
+          <div class="toggle on" id="logTog2">log scale</div>
+        </div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--red)"></i>required stack (if borrowing starts then)</span>
+          <span><i class="swatch" style="background:var(--teal)"></i>accumulated via DCA</span>
+          <span><i class="swatch" style="background:var(--gold)"></i>crossover = "ready to borrow"</span>
+        </div>
+        <div class="canid"><canvas id="c3"></canvas></div>
+        <p class="note" id="dcaNote"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="foot">
+  <b>Method.</b> Trend = a·xᵇ with a=1.728×10⁻¹⁷, b=5.76, x = days since genesis (3 Jan 2009), calibrated to Porkopolis's published year-end table. Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.65× (adjust at left). Liabilities draw one tranche every 6 months from 1 May 2026 and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
+  <b>DCA logic.</b> Each month, the slider amount buys BTC at <em>k</em>·trend price, where <em>k</em> is the "effective price paid" slider (default 0.80×). Because Bitcoin spends roughly half its time below trend and DCA captures the <em>harmonic mean</em> of visited prices, real cycle-aware DCA historically pays ~0.7–0.85× of trend, not 1.0×. Set <em>k</em>=1.0× for trend-only buying. For any candidate borrow-start date S, the model re-runs the LTV stress simulation starting at S (not May 2026) and finds the smallest stack that survives it. The handover is the first month where accumulated ≥ required.<br>
+  <b>Caveat.</b> Power-law trend growth decelerates below the fixed 11% interest around the early 2060s, so LTV bottoms out (~19%) and slowly climbs again far out — "forever" holds for ~50 yrs at this sizing, not literally infinitely. Not financial advice.
+</div>
+</div>
+
+<script>
+const A=1.7283e-17, B=5.76, GEN=Date.UTC(2009,0,3);
+const DAY=86400000;
+function days(t){return (t-GEN)/DAY;}
+function trend(t){return A*Math.pow(days(t),B);}
+const START=Date.UTC(2026,4,1);
+function addMonths(t,n){const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1);}
+
+function build(p){
+  const months=(p.horizon-2026)*12+ (12-4); // from May 2026 to Dec of horizon yr approx
+  const mrate=Math.pow(1+p.rate,1/12)-1;
+  const drawEvery=Math.max(1,Math.round(12*p.tranche/p.expense)); // months between tranches
+  let L=0, nextDraw=START, arr=[];
+  for(let i=0;i<=months;i++){
+    const t=addMonths(START,i);
+    if(i>0) L*=(1+mrate);
+    if(t>=nextDraw){ L+=p.tranche; nextDraw=addMonths(nextDraw, drawEvery);}
+    const tr=trend(t), band=p.band*tr;
+    arr.push({t,tr,band,L});
+  }
+  return arr;
+}
+function solve(p){
+  const a=build(p);
+  let best=0,bi=0;
+  a.forEach((r,i)=>{const need=r.L/(p.maxLtv*r.band); if(need>best){best=need;bi=i;}});
+  return {arr:a,N:best,peak:a[bi]};
+}
+
+let ch1,ch2,useLog=true;
+function fmtUSD(v){
+  if(v>=1e9)return '$'+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6)return '$'+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3)return '$'+(v/1e3).toFixed(0)+'k';
+  return '$'+v.toFixed(0);
+}
+function ymd(t){const d=new Date(t);return d.toLocaleString('en',{month:'short',year:'numeric',timeZone:'UTC'});}
+
+function render(){
+  const p={
+    band:+band.value, rate:+rate.value/100, expense:+exp.value*1000,
+    tranche:+tr.value*1000, maxLtv:+ltv.value/100, horizon:+hor.value
+  };
+  vBand.textContent=p.band.toFixed(2)+'×'; vRate.textContent=(+rate.value)+'%';
+  vExp.textContent='$'+exp.value+'k'; vTr.textContent='$'+tr.value+'k';
+  vLtv.textContent=ltv.value+'%'; vHor.textContent=hor.value;
+
+  const {arr,N,peak}=solve(p);
+  oStack.innerHTML=N.toFixed(2)+' <small>BTC</small>';
+  oPeak.textContent=ymd(peak.t)+'  ·  LTV '+(peak.L/(N*peak.band)*100).toFixed(0)+'% @stress';
+  oTrendLtv.textContent=(peak.L/(N*peak.tr)*100).toFixed(1)+'%';
+  const now=trend(Date.now());
+  oToday.textContent=fmtUSD(N*now)+'  ('+fmtUSD(now)+'/BTC trend)';
+
+  const labels=arr.map(r=>new Date(r.t).getUTCFullYear()+ (new Date(r.t).getUTCMonth())/12);
+  const liab=arr.map(r=>r.L);
+  const cTrend=arr.map(r=>N*r.tr);
+  const cBand=arr.map(r=>N*r.band);
+  const limit=arr.map(r=>p.maxLtv*N*r.band);
+  const ltvBand=arr.map(r=>r.L/(N*r.band)*100);
+  const ltvTrend=arr.map(r=>r.L/(N*r.tr)*100);
+
+  const grid={color:'#20222a'},tick={color:'#8d8a82',font:{family:"'JetBrains Mono'",size:10}};
+  const xcfg={type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:2026};
+
+  const ds=(label,data,color,opt={})=>({label,data,borderColor:color,backgroundColor:color,
+     borderWidth:opt.w||2,pointRadius:0,tension:.25,borderDash:opt.dash||[],fill:false});
+
+  if(ch1)ch1.destroy();
+  ch1=new Chart(c1,{type:'line',data:{labels,datasets:[
+     ds('Collateral @ trend',cTrend,'#f7931a'),
+     ds('Collateral @ 16.5ᵗʰ',cBand,'#37c8c3'),
+     ds('50% of stress collateral',limit,'#d8b25a',{w:1.5,dash:[5,4]}),
+     ds('Accrued liabilities',liab,'#e0586a',{w:2.5})
+   ]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+     plugins:{legend:{display:false},tooltip:{backgroundColor:'#15161b',borderColor:'#2a2c35',borderWidth:1,
+       titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'",size:11},
+       callbacks:{title:i=>'Year '+Math.floor(i[0].parsed.x),label:c=>c.dataset.label+': '+fmtUSD(c.parsed.y)}}},
+     scales:{x:xcfg,y:{type:useLog?'logarithmic':'linear',grid,ticks:{...tick,callback:v=>fmtUSD(v)}}}}});
+
+  if(ch2)ch2.destroy();
+  ch2=new Chart(c2,{type:'line',data:{labels,datasets:[
+     ds('LTV @ stress',ltvBand,'#37c8c3'),
+     ds('LTV @ trend',ltvTrend,'#f7931a'),
+     ds('limit',labels.map(()=>p.maxLtv*100),'#e0586a',{w:1.5,dash:[5,4]})
+   ]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+     plugins:{legend:{display:false},tooltip:{backgroundColor:'#15161b',borderColor:'#2a2c35',borderWidth:1,
+       titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'",size:11},
+       callbacks:{title:i=>'Year '+Math.floor(i[0].parsed.x),label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'%'}}},
+     scales:{x:xcfg,y:{grid,ticks:{...tick,callback:v=>v+'%'},suggestedMin:0,suggestedMax:Math.max(60,p.maxLtv*100+10)}}}});
+
+  const minLtv=Math.min(...ltvBand), minIdx=ltvBand.indexOf(minLtv);
+  const endLtv=ltvBand[ltvBand.length-1];
+  ltvNote.textContent=`Stress LTV peaks at the limit on the binding date, falls to ~${minLtv.toFixed(0)}% by ${Math.floor(labels[minIdx])}, then drifts to ${endLtv.toFixed(0)}% by ${hor.value} as trend growth slips below the interest rate.`;
+}
+['band','rate','exp','tr','ltv','hor'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderDca();}));
+logTog.addEventListener('click',()=>{useLog=!useLog;logTog.classList.toggle('on',useLog);render();});
+
+// ============ DCA accumulation phase ============
+const TODAY=Date.UTC(2026,5,1); // June 1, 2026
+let ch3, useLog3=true;
+
+// Required stack if borrowing begins on date S, using current sliders
+function requiredStackStarting(S, p){
+  const months=30*12;          // 30-yr stress horizon from S
+  const mrate=Math.pow(1+p.rate,1/12)-1;
+  const drawEvery=Math.max(1,Math.round(12*p.tranche/p.expense));
+  let L=0, nextDraw=S, need=0;
+  for(let i=0;i<=months;i++){
+    const t=addMonths(S,i);
+    if(i>0) L*=(1+mrate);
+    if(t>=nextDraw){L+=p.tranche; nextDraw=addMonths(nextDraw,drawEvery);}
+    const band=p.band*trend(t);
+    const n=L/(p.maxLtv*band);
+    if(n>need) need=n;
+  }
+  return need;
+}
+
+function renderDca(){
+  const dca=+document.getElementById('dca').value;
+  const eff=+document.getElementById('eff').value;
+  document.getElementById('vDca').textContent='$'+dca.toLocaleString();
+  document.getElementById('vEff').textContent=eff.toFixed(2)+'×';
+
+  // pull current top-of-page assumptions
+  const p={
+    band:+document.getElementById('band').value,
+    rate:+document.getElementById('rate').value/100,
+    expense:+document.getElementById('exp').value*1000,
+    tranche:+document.getElementById('tr').value*1000,
+    maxLtv:+document.getElementById('ltv').value/100
+  };
+
+  // Walk month by month from TODAY; at each month compute accumulated & required
+  const maxMonths=50*12; // 50 yr search window
+  let stack=0, invested=0;
+  const months=[], req=[], acc=[], invd=[], dates=[];
+  let crossIdx=-1;
+  for(let i=0;i<=maxMonths;i++){
+    const t=addMonths(TODAY,i);
+    // accumulation
+    if(i>0){ const pn=eff*trend(addMonths(TODAY,i-1)); stack+=dca/pn; invested+=dca; }
+    // required if borrowing starts at t (sample every 3 months for speed)
+    let r;
+    if(i%3===0 || i===maxMonths){
+      r = requiredStackStarting(t,p);
+    } else { r = req[req.length-1]; }
+    months.push(i); dates.push(t); acc.push(stack); req.push(r); invd.push(invested);
+    if(crossIdx<0 && i>0 && stack>=r) crossIdx=i;
+  }
+
+  if(crossIdx>=0){
+    const yrs=crossIdx/12, y=Math.floor(yrs), m=Math.round((yrs-y)*12);
+    document.getElementById('oReady').classList.remove('warn');
+    document.getElementById('oReady').innerHTML=`${y} <small>yr</small> ${m} <small>mo</small>`;
+    document.getElementById('oAcc').textContent= acc[crossIdx].toFixed(3)+' BTC  ·  '+ymd(dates[crossIdx]);
+    document.getElementById('oInv').textContent= fmtUSD(invd[crossIdx]);
+    document.getElementById('oPrice').textContent= fmtUSD(trend(dates[crossIdx]))+' / BTC';
+  } else {
+    document.getElementById('oReady').innerHTML='&gt; 50 yr <small>(beyond horizon)</small>';
+    document.getElementById('oAcc').textContent= acc[acc.length-1].toFixed(3)+' BTC after 50 yr';
+    document.getElementById('oInv').textContent= fmtUSD(invd[invd.length-1]);
+    document.getElementById('oPrice').textContent= '—';
+  }
+
+  // Chart
+  const sample=(arr)=>arr.filter((_,i)=>i%3===0);
+  const labels=sample(dates).map(t=>new Date(t).getUTCFullYear()+ (new Date(t).getUTCMonth())/12);
+  const reqS=sample(req), accS=sample(acc);
+
+  const grid={color:'#20222a'},tick={color:'#8d8a82',font:{family:"'JetBrains Mono'",size:10}};
+  const ds=(label,data,color,opt={})=>({label,data,borderColor:color,backgroundColor:color,
+     borderWidth:opt.w||2,pointRadius:0,tension:.25,borderDash:opt.dash||[],fill:false});
+
+  // crossover marker dataset
+  const markX = crossIdx>=0 ? new Date(dates[crossIdx]).getUTCFullYear()+ new Date(dates[crossIdx]).getUTCMonth()/12 : null;
+  const markY = crossIdx>=0 ? acc[crossIdx] : null;
+
+  if(ch3)ch3.destroy();
+  ch3=new Chart(c3,{type:'line',data:{labels,datasets:[
+     ds('Required stack',reqS,'#e0586a',{w:2.5}),
+     ds('Accumulated via DCA',accS,'#37c8c3',{w:2.5}),
+     markX!==null ? {label:'crossover',data:[{x:markX,y:markY}],borderColor:'#d8b25a',
+       backgroundColor:'#d8b25a',pointRadius:6,pointHoverRadius:8,showLine:false,type:'scatter'} : null
+   ].filter(Boolean)},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+     plugins:{legend:{display:false},tooltip:{backgroundColor:'#15161b',borderColor:'#2a2c35',borderWidth:1,
+       titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'",size:11},
+       callbacks:{title:i=>'Year '+Math.floor(i[0].parsed.x),
+         label:c=>c.dataset.label+': '+(c.parsed.y!==undefined?c.parsed.y.toFixed(3)+' BTC':'')}}},
+     scales:{x:{type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:2026},
+       y:{type:useLog3?'logarithmic':'linear',grid,ticks:{...tick,callback:v=>v.toFixed(2)+' BTC'}}}}});
+
+  if(crossIdx>=0){
+    const yrs=crossIdx/12;
+    document.getElementById('dcaNote').textContent=
+      `At $${dca.toLocaleString()}/mo paying ${eff.toFixed(2)}× trend on average, the curves cross after ${yrs.toFixed(1)} years. Drag "Effective price paid" up toward 1.00× to model trend-only buys, or down toward 0.5× to model aggressively buying dips.`;
+  } else {
+    document.getElementById('dcaNote').textContent=
+      `$${dca.toLocaleString()}/mo at ${eff.toFixed(2)}× trend is too small to overtake the (falling) required-stack curve within 50 yrs. Raise the slider, lower the effective price, or trim the expense above.`;
+  }
+}
+document.getElementById('dca').addEventListener('input',renderDca);
+document.getElementById('eff').addEventListener('input',renderDca);
+document.getElementById('logTog2').addEventListener('click',()=>{useLog3=!useLog3;document.getElementById('logTog2').classList.toggle('on',useLog3);renderDca();});
+
+render();
+renderDca();
+</script>
