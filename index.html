@@ -157,7 +157,7 @@
               <div class="sm" id="oAcc">—</div></div>
             <div class="stat"><div class="lbl">Total USD invested via DCA</div>
               <div class="sm" id="oInv">—</div></div>
-            <div class="stat"><div class="lbl">Trend BTC price at handover</div>
+            <div class="stat"><div class="lbl">Stack value at handover @ trend</div>
               <div class="sm" id="oPrice">—</div></div>
           </div>
         </div>
@@ -360,7 +360,7 @@
         document.getElementById('oReady').innerHTML=`${y} <small>yr</small> ${m} <small>mo</small>`;
         document.getElementById('oAcc').textContent= acc[crossIdx].toFixed(3)+' BTC  ·  '+ymd(dates[crossIdx]);
         document.getElementById('oInv').textContent= fmtUSD(invd[crossIdx]);
-        document.getElementById('oPrice').textContent= fmtUSD(trend(dates[crossIdx]))+' / BTC';
+        document.getElementById('oPrice').textContent= fmtUSD(trend(dates[crossIdx])*acc[crossIdx])+'  ('+fmtUSD(trend(dates[crossIdx]))+'/BTC)';
       } else {
         document.getElementById('oReady').innerHTML='&gt; 50 yr <small>(beyond horizon)</small>';
         document.getElementById('oAcc').textContent= acc[acc.length-1].toFixed(3)+' BTC after 50 yr';
