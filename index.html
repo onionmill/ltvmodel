@@ -137,7 +137,7 @@
     <section style="margin-top:46px;padding-top:36px;border-top:1px solid var(--line)">
       <p class="kicker" style="color:var(--teal)">Phase 0 · Accumulation via DCA</p>
       <h1 style="font-size:clamp(24px,3.6vw,36px);margin-bottom:14px">How long until you can <em>start borrowing?</em></h1>
-      <p class="sub" style="margin-bottom:26px">Save monthly into Bitcoin at the trend price, starting today (June 2026). Every month your stack grows;
+      <p class="sub" style="margin-bottom:26px">Save monthly into Bitcoin at the trend price, starting today. Every month your stack grows;
       every month the <em>required</em> stack for the strategy above shrinks (because trend price climbs). Wait for them to cross.</p>
 
       <div class="grid">
@@ -183,11 +183,11 @@
     <div class="foot">
       <b>Method.</b> Trend = a·xᵇ with a=1.728×10⁻¹⁷, b=5.76, x = days since genesis (3 Jan 2009), calibrated to Porkopolis's published year-end table. 
       Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.45×. Liabilities draw one tranche 
-      every 6 months from 1 May 2026 and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
+      every 6 months from today and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
       <b>DCA logic.</b> Each month, the slider amount buys BTC at <em>k</em>·trend price, where <em>k</em> is the "effective price paid" slider (default 0.80×). 
       Because Bitcoin spends roughly half its time below trend and DCA captures the <em>harmonic mean</em> of visited prices, real cycle-aware DCA historically 
       pays ~0.7–0.85× of trend, not 1.0×. Set <em>k</em>=1.0× for trend-only buying. For any candidate borrow-start date S, the model re-runs the LTV stress simulation 
-      starting at S (not May 2026) and finds the smallest stack that survives it. The handover is the first month where accumulated ≥ required.<br>
+      starting at S and finds the smallest stack that survives it. The handover is the first month where accumulated ≥ required.<br>
       <b>Disclaimer.</b> This model is for informational purposes only. Not financial advice. 
       Every number presented depends on an unproven assumption: that Bitcoin's historical "power-law" price trend continues for decades. It may not.
       This strategy uses leverage — borrowing against Bitcoin and letting interest compound without repaying. If Bitcoin's price falls far enough, 
@@ -201,13 +201,16 @@
     <script>
     const A=1.7283e-17, B=5.76, GEN=Date.UTC(2009,0,3);
     const DAY=86400000;
+    const START=Date.now();
+    const START_YEAR=new Date(START).getUTCFullYear();
+    const START_MONTH=new Date(START).getUTCMonth();
+
     function days(t){return (t-GEN)/DAY;}
     function trend(t){return A*Math.pow(days(t),B);}
-    const START=Date.UTC(2026,4,1);
     function addMonths(t,n){const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1);}
 
     function build(p){
-      const months=(p.horizon-2026)*12+ (12-4); // from May 2026 to Dec of horizon yr approx
+      const months=(p.horizon-START_YEAR)*12+ (12-START_MONTH); // from this month to Dec of horizon yr approx
       const mrate=Math.pow(1+p.rate,1/12)-1;
       const drawEvery=Math.max(1,Math.round(12*p.tranche/p.expense)); // months between tranches
       let L=0, nextDraw=START, arr=[];
@@ -261,7 +264,8 @@
       const ltvTrend=arr.map(r=>r.L/(N*r.tr)*100);
 
       const grid={color:'#20222a'},tick={color:'#8d8a82',font:{family:"'JetBrains Mono'",size:10}};
-      const xcfg={type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:2026};
+      const todayX = START_YEAR + START_MONTH/12;
+      const xcfg={type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:todayX};
 
       const ds=(label,data,color,opt={})=>({label,data,borderColor:color,backgroundColor:color,
         borderWidth:opt.w||2,pointRadius:0,tension:.25,borderDash:opt.dash||[],fill:false});
@@ -297,7 +301,7 @@
     logTog.addEventListener('click',()=>{useLog=!useLog;logTog.classList.toggle('on',useLog);render();});
 
     // ============ DCA accumulation phase ============
-    const TODAY=Date.UTC(2026,5,1); // June 1, 2026
+    const TODAY=START; // Start today
     let ch3, useLog3=true;
 
     // Required stack if borrowing begins on date S, using current sliders
@@ -388,7 +392,7 @@
           titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'",size:11},
           callbacks:{title:i=>'Year '+Math.floor(i[0].parsed.x),
             label:c=>c.dataset.label+': '+(c.parsed.y!==undefined?c.parsed.y.toFixed(3)+' BTC':'')}}},
-        scales:{x:{type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:2026},
+        scales:{x:{type:'linear',grid,ticks:{...tick,callback:v=>Math.round(v),stepSize:5},min:START_YEAR+START_MONTH/12},
           y:{type:useLog3?'logarithmic':'linear',grid,ticks:{...tick,callback:v=>v.toFixed(2)+' BTC'}}}}});
 
       if(crossIdx>=0){
