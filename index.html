@@ -295,7 +295,7 @@
 
       const minLtv=Math.min(...ltvBand), minIdx=ltvBand.indexOf(minLtv);
       const endLtv=ltvBand[ltvBand.length-1];
-      ltvNote.textContent=`Stress LTV peaks at the limit on the binding date, falls to ~${minLtv.toFixed(0)}% by ${Math.floor(labels[minIdx])}, then drifts to ${endLtv.toFixed(0)}% by ${hor.value} as trend growth slips below the interest rate.`;
+      ltvNote.textContent=`Stress LTV peaks at the limit on the binding date, then drifts to ${endLtv.toFixed(0)}% by ${hor.value} as trend growth slips below the interest rate.`;
     }
     ['band','rate','exp','tr','ltv','hor'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderDca();}));
     logTog.addEventListener('click',()=>{useLog=!useLog;logTog.classList.toggle('on',useLog);render();});
