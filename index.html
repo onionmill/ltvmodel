@@ -81,8 +81,8 @@
       <div>
         <div class="card">
           <h2>Assumptions</h2>
-          <div class="ctrl" style="display:none"><label>16.5ᵗʰ pctile multiple <span class="val" id="vBand">0.45×</span></label>
-            <input type="range" id="band" min="0.45" max="0.85" step="0.01" value="0.45"></div>
+          <div class="ctrl" style="display:none"><label>16.5ᵗʰ pctile multiple <span class="val" id="vBand">0.42×</span></label>
+            <input type="range" id="band" min="0.42" max="0.85" step="0.01" value="0.42"></div>
           <div class="ctrl"><label>Loan interest (annual) <span class="val" id="vRate">11%</span></label>
             <input type="range" id="rate" min="4" max="16" step="0.5" value="11"></div>
           <div class="ctrl"><label>Annual expense <span class="val" id="vExp">$100k</span></label>
@@ -182,7 +182,7 @@
 
     <div class="foot">
       <b>Method.</b> Trend = a·xᵇ with a=1.728×10⁻¹⁷, b=5.76, x = days since genesis (3 Jan 2009), calibrated to Porkopolis's published year-end table. 
-      Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.45×. Liabilities draw one tranche 
+      Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.42×. Liabilities draw one tranche 
       every few months from today and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
       <b>DCA logic.</b> Each month, the slider amount buys BTC at <em>k</em>·trend price, where <em>k</em> is the "effective price paid" slider (default 0.80×). 
       Because Bitcoin spends roughly half its time below trend and DCA captures the <em>harmonic mean</em> of visited prices, real cycle-aware DCA historically 
