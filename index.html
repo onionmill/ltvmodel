@@ -212,12 +212,13 @@
     function build(p){
       const months=(p.horizon-START_YEAR)*12+ (12-START_MONTH); // from this month to Dec of horizon yr approx
       const mrate=Math.pow(1+p.rate,1/12)-1;
-      const drawEvery=Math.max(1,Math.round(12*p.tranche/p.expense)); // months between tranches
-      let L=0, nextDraw=START, arr=[];
+      const monthlyNeed=p.expense/12;
+      let L=0, cash=0, arr=[];
       for(let i=0;i<=months;i++){
         const t=addMonths(START,i);
         if(i>0) L*=(1+mrate);
-        if(t>=nextDraw){ L+=p.tranche; nextDraw=addMonths(nextDraw, drawEvery);}
+        cash -= monthlyNeed;
+        while(cash < 0){ L += p.tranche; cash += p.tranche; }
         const tr=trend(t), band=p.band*tr;
         arr.push({t,tr,band,L});
       }
@@ -308,12 +309,13 @@
     function requiredStackStarting(S, p){
       const months=30*12;          // 30-yr stress horizon from S
       const mrate=Math.pow(1+p.rate,1/12)-1;
-      const drawEvery=Math.max(1,Math.round(12*p.tranche/p.expense));
-      let L=0, nextDraw=S, need=0;
+      const monthlyNeed=p.expense/12;
+      let L=0, cash=0, need=0;
       for(let i=0;i<=months;i++){
         const t=addMonths(S,i);
         if(i>0) L*=(1+mrate);
-        if(t>=nextDraw){L+=p.tranche; nextDraw=addMonths(nextDraw,drawEvery);}
+        cash -= monthlyNeed;
+        while(cash < 0){ L += p.tranche; cash += p.tranche; }
         const band=p.band*trend(t);
         const n=L/(p.maxLtv*band);
         if(n>need) need=n;
