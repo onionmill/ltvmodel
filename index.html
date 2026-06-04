@@ -253,8 +253,8 @@
       oStack.innerHTML=N.toFixed(2)+' <small>BTC</small>';
       oPeak.textContent=ymd(peak.t)+'  ·  LTV '+(peak.L/(N*peak.band)*100).toFixed(0)+'% @stress';
       oTrendLtv.textContent=(peak.L/(N*peak.tr)*100).toFixed(1)+'%';
-      const now=trend(Date.now());
-      oToday.textContent=fmtUSD(N*now)+'  ('+fmtUSD(now)+'/BTC trend)';
+      const now=trend(START);
+      oToday.textContent=fmtUSD(N*now)+'  ('+fmtUSD(now)+'/BTC)';
 
       const labels=arr.map(r=>new Date(r.t).getUTCFullYear()+ (new Date(r.t).getUTCMonth())/12);
       const liab=arr.map(r=>r.L);
