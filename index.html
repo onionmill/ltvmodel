@@ -303,12 +303,13 @@
 
     // ============ DCA accumulation phase ============
     const TODAY=START; // Start today
+    const RATE_DISCOUNT=2/3; // Approximate lower interest rate for future loans
     let ch3, useLog3=true;
 
     // Required stack if borrowing begins on date S, using current sliders
     function requiredStackStarting(S, p){
       const months=30*12;          // 30-yr stress horizon from S
-      const mrate=Math.pow(1+p.rate,1/12)-1;
+      const mrate=Math.pow(1+p.rate*RATE_DISCOUNT,1/12)-1;
       const monthlyNeed=p.expense/12;
       let L=0, cash=0, need=0;
       for(let i=0;i<=months;i++){
