@@ -116,7 +116,9 @@
           <div class="legend">
             <span><i class="swatch" style="background:var(--orange)"></i>collateral @ trend</span>
             <span><i class="swatch" style="background:var(--teal)"></i>collateral @ 16.5ᵗʰ pctile</span>
-            <span><i class="swatch" style="background:var(--gold);height:0;border-top:2px dashed var(--gold)"></i>50% of stress collateral</span>
+            <span><i class="swatch" style="background:var(--gold);height:0;border-top:2px dashed var(--gold)"></i>
+              <span id="ltvStressLbl"></span>
+            </span>
             <span><i class="swatch" style="background:var(--red)"></i>accrued liabilities</span>
           </div>
           <div class="canid"><canvas id="c1"></canvas></div>
@@ -126,7 +128,9 @@
           <div class="legend">
             <span><i class="swatch" style="background:var(--teal)"></i>LTV if price at 16.5ᵗʰ pctile (stress)</span>
             <span><i class="swatch" style="background:var(--orange)"></i>LTV if price on trend</span>
-            <span><i class="swatch" style="background:var(--red);height:0;border-top:2px dashed var(--red)"></i>50% limit</span>
+            <span><i class="swatch" style="background:var(--red);height:0;border-top:2px dashed var(--red)"></i>
+              <span id="ltvLimitLbl"></span>
+            </span>
           </div>
           <div class="canid short"><canvas id="c2"></canvas></div>
           <p class="note" id="ltvNote"></p>
@@ -296,6 +300,8 @@
 
       const minLtv=Math.min(...ltvBand), minIdx=ltvBand.indexOf(minLtv);
       const endLtv=ltvBand[ltvBand.length-1];
+      ltvStressLbl.textContent=`${ltv.value}% of stress collateral`;
+      ltvLimitLbl.textContent=`${ltv.value}% limit`;
       ltvNote.textContent=`Stress LTV peaks at the limit on the binding date, then drifts to ${endLtv.toFixed(0)}% by ${hor.value} as trend growth slips below the interest rate.`;
     }
     ['band','rate','exp','tr','ltv','hor'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderDca();}));
