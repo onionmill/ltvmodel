@@ -279,7 +279,7 @@
       ch1=new Chart(c1,{type:'line',data:{labels,datasets:[
         ds('Collateral @ trend',cTrend,'#f7931a'),
         ds('Collateral @ 16.5ᵗʰ',cBand,'#37c8c3'),
-        ds('50% of stress collateral',limit,'#d8b25a',{w:1.5,dash:[5,4]}),
+        ds(`${ltv.value}% of stress collateral`,limit,'#d8b25a',{w:1.5,dash:[5,4]}),
         ds('Accrued liabilities',liab,'#e0586a',{w:2.5})
       ]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
         plugins:{legend:{display:false},tooltip:{backgroundColor:'#15161b',borderColor:'#2a2c35',borderWidth:1,
