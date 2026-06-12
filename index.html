@@ -87,6 +87,8 @@
             <input type="range" id="rate" min="4" max="16" step="0.5" value="9.5"></div>
           <div class="ctrl"><label>Annual expense <span class="val" id="vExp">$100k</span></label>
             <input type="range" id="exp" min="40" max="200" step="10" value="100"></div>
+          <div class="ctrl"><label>Inflation rate (annual) <span class="val" id="vInf">3.0%</span></label>
+            <input type="range" id="inf" min="0" max="10" step="0.1" value="3"></div>
           <div class="ctrl"><label>Tranche size <span class="val" id="vTr">$10k</span></label>
             <input type="range" id="tr" min="10" max="100" step="5" value="10"></div>
           <div class="ctrl"><label>Max LTV <span class="val" id="vLtv">50%</span></label>
@@ -218,11 +220,11 @@
     function build(p){
       const months=(p.horizon-START_YEAR)*12+ (12-START_MONTH); // from this month to Dec of horizon yr approx
       const mrate=Math.pow(1+p.rate,1/12)-1;
-      const monthlyNeed=p.expense/12;
-      let L=0, cash=0, arr=[];
+      const mInfl=Math.pow(1+p.inflation,1/12)-1;
+      let L=0, cash=0, arr=[], monthlyNeed=p.expense/12;
       for(let i=0;i<=months;i++){
         const t=addMonths(START,i);
-        if(i>0) L*=(1+mrate);
+        if(i>0){ L*=(1+mrate); monthlyNeed*=(1+mInfl); }
         cash -= monthlyNeed;
         while(cash < 0){ L += p.tranche; cash += p.tranche; }
         const tr=trend(t), band=p.band*tr;
@@ -249,11 +251,13 @@
     function render(){
       const p={
         band:+band.value, rate:+rate.value/100, expense:+exp.value*1000,
-        tranche:+tr.value*1000, maxLtv:+ltv.value/100, horizon:+hor.value
+        tranche:+tr.value*1000, maxLtv:+ltv.value/100, horizon:+hor.value,
+        inflation:+inf.value/100
       };
       vBand.textContent=p.band.toFixed(2)+'×'; vRate.textContent=(+rate.value)+'%';
       vExp.textContent='$'+exp.value+'k'; vTr.textContent='$'+tr.value+'k';
       vLtv.textContent=ltv.value+'%'; vHor.textContent=hor.value;
+      vInf.textContent=(+inf.value).toFixed(1)+'%';
 
       const {arr,N,peak}=solve(p);
       oStack.innerHTML=N.toFixed(2)+' <small>BTC</small>';
@@ -306,7 +310,7 @@
       ltvLimitLbl.textContent=`${ltv.value}% limit`;
       ltvNote.textContent=`Stress LTV peaks at the limit on the binding date, then drifts to ${endLtv.toFixed(0)}% by ${hor.value} as trend growth slips below the interest rate.`;
     }
-    ['band','rate','exp','tr','ltv','hor'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderDca();}));
+    ['band','rate','exp','inf','tr','ltv','hor'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderDca();}));
     logTog.addEventListener('click',()=>{useLog=!useLog;logTog.classList.toggle('on',useLog);render();});
 
     // ============ DCA accumulation phase ============
