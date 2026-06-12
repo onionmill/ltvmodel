@@ -315,17 +315,22 @@
 
     // ============ DCA accumulation phase ============
     const TODAY=START; // Start today
-    const RATE_DISCOUNT=2/3; // Approximate lower interest rate for future loans
+    // Loan rates are assumed to fall in parallel with the power law's
+    // instantaneous yearly return — today's discount is 1.0, decaying over time
+    // as Bitcoin's trend yearly return decays toward zero.
+    function trendYearlyReturn(t){ const d=days(t); return Math.pow((d+365.25)/d, B) - 1; }
+    const TODAY_TREND_RETURN = trendYearlyReturn(TODAY);
+    function rateDiscount(t){ return trendYearlyReturn(t) / TODAY_TREND_RETURN; }
     let ch3, useLog3=true;
 
     // Required stack if borrowing begins on date S, using current sliders
     function requiredStackStarting(S, p){
       const months=30*12;          // 30-yr stress horizon from S
-      const mrate=Math.pow(1+p.rate*RATE_DISCOUNT,1/12)-1;
       const monthlyNeed=p.expense/12;
       let L=0, cash=0, need=0;
       for(let i=0;i<=months;i++){
         const t=addMonths(S,i);
+        const mrate=Math.pow(1+p.rate*rateDiscount(t),1/12)-1;
         if(i>0) L*=(1+mrate);
         cash -= monthlyNeed;
         while(cash < 0){ L += p.tranche; cash += p.tranche; }
