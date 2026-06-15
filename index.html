@@ -433,6 +433,12 @@
 
     render();
     renderDca();
+    // Re-render once webfonts load: Chart.js measures tick-label widths with
+    // the fallback font on first paint, which can clip the wider "X.XX BTC"
+    // labels on the DCA chart when JetBrains Mono swaps in.
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(()=>{render();renderDca();});
+    }
     </script>
   </body>
 </html>
