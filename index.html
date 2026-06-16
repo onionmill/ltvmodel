@@ -72,8 +72,8 @@
       <h1>Financing $100k/yr <em>borrowing against Bitcoin</em></h1>
       <p class="sub">
         How large a stack keeps loan-to-value ≤ 50% even if price sits at the 
-        <a target="_blank" class="sub" href="https://www.porkopolis.io/thechart/">Porkopolis power law</a> 
-        16.5ᵗʰ-percentile support band — while drawing tranches as needed and capitalising interest, indefinitely.
+        <a target="_blank" class="sub" href="https://btcpowerlaw.nl/">bitcoin power law floor</a> 
+        — while drawing tranches as needed and capitalising interest, indefinitely.
       </p>
     </header>
 
@@ -81,8 +81,8 @@
       <div>
         <div class="card">
           <h2>Assumptions</h2>
-          <div class="ctrl" style="display:none"><label>16.5ᵗʰ pctile multiple <span class="val" id="vBand">0.42×</span></label>
-            <input type="range" id="band" min="0.42" max="0.85" step="0.01" value="0.42"></div>
+          <div class="ctrl" style="display:none"><label>floor multiple <span class="val" id="vBand">0.42×</span></label>
+            <input type="range" id="band" min="0.40" max="0.85" step="0.01" value="0.42"></div>
           <div class="ctrl"><label>Loan interest (annual) <span class="val" id="vRate">11%</span></label>
             <input type="range" id="rate" min="4" max="16" step="0.5" value="11"></div>
           <div class="ctrl"><label>Annual expense <span class="val" id="vExp">$100k</span></label>
@@ -117,7 +117,7 @@
           </div>
           <div class="legend">
             <span><i class="swatch" style="background:var(--orange)"></i>collateral @ trend</span>
-            <span><i class="swatch" style="background:var(--teal)"></i>collateral @ 16.5ᵗʰ pctile</span>
+            <span><i class="swatch" style="background:var(--teal)"></i>collateral @ floor</span>
             <span><i class="swatch" style="background:var(--gold);height:0;border-top:2px dashed var(--gold)"></i>
               <span id="ltvStressLbl"></span>
             </span>
@@ -128,7 +128,7 @@
         <div class="card chartcard" style="margin-top:18px">
           <div class="charthead"><h3>Loan-to-value over time</h3></div>
           <div class="legend">
-            <span><i class="swatch" style="background:var(--teal)"></i>LTV if price at 16.5ᵗʰ pctile (stress)</span>
+            <span><i class="swatch" style="background:var(--teal)"></i>LTV if price at floor (stress)</span>
             <span><i class="swatch" style="background:var(--orange)"></i>LTV if price on trend</span>
             <span><i class="swatch" style="background:var(--red);height:0;border-top:2px dashed var(--red)"></i>
               <span id="ltvLimitLbl"></span>
@@ -189,9 +189,9 @@
     </section>
 
     <div class="foot">
-      <b>Method.</b> Trend = a·xᵇ with a=1.728×10⁻¹⁷, b=5.76, x = days since genesis (3 Jan 2009), calibrated to Porkopolis's published year-end table. 
-      Stress price = (multiple)·trend; Porkopolis's rarely-breached floor ≈ 0.42×, so the 16.5ᵗʰ-pctile 1-σ support is taken near 0.42×. Liabilities draw one tranche 
-      every few months from today and compound interest monthly; nothing is ever repaid. Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
+      <b>Method.</b> Trend = a·xᵇ with a=10<sup>-16.493</sup>, b=5.688, x = days since genesis (3 Jan 2009). Stress price = (multiple)·trend; Bitcoin's 
+      rarely-breached floor ≈ 0.42×. Liabilities draw one tranche every few months from today and compound interest monthly; nothing is ever repaid. 
+      Required stack = maxₜ [ liabilities(t) ÷ (maxLTV · stress price(t)) ].<br>
       <b>DCA logic.</b> Each month, the slider amount buys BTC at <em>k</em>·trend price, where <em>k</em> is the "effective price paid" slider (default 0.80×). 
       Because Bitcoin spends roughly half its time below trend and DCA captures the <em>harmonic mean</em> of visited prices, real cycle-aware DCA historically 
       pays ~0.7–0.85× of trend, not 1.0×. Set <em>k</em>=1.0× for trend-only buying. For any candidate borrow-start date S, the model re-runs the LTV stress simulation 
@@ -207,7 +207,7 @@
     </div>
 
     <script>
-    const A=1.7283e-17, B=5.76, GEN=Date.UTC(2009,0,3);
+    const A=Math.pow(10,-16.493), B=5.688, GEN=Date.UTC(2009,0,3);
     const DAY=86400000;
     const START=Date.now();
     const START_YEAR=new Date(START).getUTCFullYear();
@@ -284,7 +284,7 @@
       if(ch1)ch1.destroy();
       ch1=new Chart(c1,{type:'line',data:{labels,datasets:[
         ds('Collateral @ trend',cTrend,'#f7931a'),
-        ds('Collateral @ 16.5ᵗʰ',cBand,'#37c8c3'),
+        ds('Collateral @ floor',cBand,'#37c8c3'),
         ds(`${ltv.value}% of stress collateral`,limit,'#d8b25a',{w:1.5,dash:[5,4]}),
         ds('Accrued liabilities',liab,'#e0586a',{w:2.5})
       ]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
