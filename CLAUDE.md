@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a bitcoin retirement calculator. It’s based on the bitcoin power law and models BTC collateral requirements to finance a USD amount of annual expenses. A DCA calculator shows how many years someone needs to save in BTC to get there. Assuming the trend growth rate of the Bitcoin Power Law on Porkopolis ( https://www.porkopolis.io/thechart/ ), this calculator answers the question of how big a BTC stack should be to keep an LTV of maximum 50% if we borrow against it at a certain amount of annual interest and keep refinancing forever. It assumes we borrow only what we need at loan intervals starting today. It take the model’s probability ranges for drawdowns into consideration to try to maintain 50% LTV at the 16.5th percentile. Finally, it plots a chart of the USD value of accrued liabilities (including interest) over time against the USD value of the BTC collateral.
+This is a bitcoin retirement calculator. It’s based on the bitcoin power law and models BTC collateral requirements to finance a USD amount of annual expenses. A DCA calculator shows how many years someone needs to save in BTC to get there. Assuming the trend growth rate of the Bitcoin Power Law ( https://btcpowerlaw.nl/ ), this calculator answers the question of how big a BTC stack should be to keep an LTV of maximum 50% if we borrow against it at a certain amount of annual interest and keep refinancing forever. It assumes we borrow only what we need at loan intervals starting today. It take the model’s probability ranges for drawdowns into consideration to try to maintain 50% LTV at the power law floor (0.42x trend). Finally, it plots a chart of the USD value of accrued liabilities (including interest) over time against the USD value of the BTC collateral.
 
 Single-file static web app — everything lives in `index.html` (HTML structure, CSS, and JavaScript). No build step, no package manager, no dependencies to install. Deployed via GitHub Pages to `retireonbtc.org` (CNAME).
 
@@ -44,11 +44,11 @@ Controls: monthly savings, effective price paid multiplier. Shares the Section 1
 ### Power-law model constants
 
 ```js
-const A = 1.7283e-17, B = 5.76, GEN = Date.UTC(2009, 0, 3); // Bitcoin genesis
+const A = Math.pow(10,-16.493), B = 5.688, GEN = Date.UTC(2009, 0, 3); // Bitcoin genesis
 function trend(t) { return A * Math.pow((t - GEN) / DAY, B); }
 ```
 
-Stress price = `band × trend(t)` where `band ≈ 0.42` (Porkopolis 16.5th-percentile floor).
+Stress price = `band × trend(t)` where `band ≈ 0.42` (power law floor).
 
 ### CSS design tokens
 
