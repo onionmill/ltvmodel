@@ -104,7 +104,7 @@
             <div class="sm" id="oPeak">—</div></div>
           <div class="stat"><div class="lbl">LTV at trend price, that date</div>
             <div class="sm" id="oTrendLtv">—</div></div>
-          <div class="stat"><div class="lbl">Stack value today @ trend</div>
+          <div class="stat"><div class="lbl">Stack value today @ floor</div>
             <div class="sm" id="oToday">—</div></div>
         </div>
       </div>
@@ -264,7 +264,7 @@
       oPeak.textContent=ymd(peak.t)+'  ·  LTV '+(peak.L/(N*peak.band)*100).toFixed(0)+'% @stress';
       oTrendLtv.textContent=(peak.L/(N*peak.tr)*100).toFixed(1)+'%';
       const now=trend(START);
-      oToday.textContent=fmtUSD(N*now)+'  ('+fmtUSD(now)+'/BTC)';
+      oToday.textContent=fmtUSD(N*now*p.band)+'  ('+fmtUSD(now*p.band)+'/BTC @floor)';
 
       const labels=arr.map(r=>new Date(r.t).getUTCFullYear()+ (new Date(r.t).getUTCMonth())/12);
       const liab=arr.map(r=>r.L);
