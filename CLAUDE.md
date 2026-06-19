@@ -8,9 +8,9 @@ This is a bitcoin retirement calculator. It’s based on the bitcoin power law a
 
 Single-file static web app — everything lives in `index.html` (HTML structure, CSS, and JavaScript). No build step, no package manager, no dependencies to install. Deployed via GitHub Pages to `retireonbtc.org` (CNAME).
 
-External dependencies loaded from CDN:
-- Chart.js 4.5.1 (`chart.umd.min.js`)
-- Google Fonts: Fraunces, Spectral, JetBrains Mono
+External assets are vendored locally (no CDN at runtime):
+- Chart.js 4.5.1 — `chart.umd.min.js` at repo root
+- Fonts — `fonts/*.woff2` (Fraunces, Spectral, JetBrains Mono, latin subset only)
 
 ## Development
 
