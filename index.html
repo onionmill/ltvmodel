@@ -11,16 +11,11 @@
 
     <title>Bitcoin Power-Law Collateral Model</title>
     <link rel="icon" href="/favicon.ico" sizes="any">
-    <script src="/chart.umd.min.js"></script>
+    <link rel="preload" href="/fonts/spectral-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+    <script src="/chart.umd.min.js" defer></script>
 
     <style>
-      @font-face {
-        font-family: 'Fraunces';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url(/fonts/fraunces.woff2) format('woff2');
-      }
       @font-face {
         font-family: 'Fraunces';
         font-style: normal;
@@ -922,17 +917,21 @@
         renderDca();
       });
 
-      render();
-      renderDca();
-      // Re-render once webfonts load: Chart.js measures tick-label widths with
-      // the fallback font on first paint, which can clip the wider "X.XX BTC"
-      // labels on the DCA chart when JetBrains Mono swaps in.
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => {
-          render();
-          renderDca();
-        });
-      }
+      // Chart.js loads with `defer`, so wait for parsing to finish before the
+      // first render() call (which constructs `new Chart(...)`).
+      document.addEventListener('DOMContentLoaded', () => {
+        render();
+        renderDca();
+        // Re-render once webfonts load: Chart.js measures tick-label widths with
+        // the fallback font on first paint, which can clip the wider "X.XX BTC"
+        // labels on the DCA chart when JetBrains Mono swaps in.
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => {
+            render();
+            renderDca();
+          });
+        }
+      });
     </script>
   </body>
 </html>
